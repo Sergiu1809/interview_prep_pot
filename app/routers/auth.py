@@ -21,10 +21,20 @@ def register(user_data: UserCreate, db: Session = Depends(get_db)):
     new_user = User(
         name=user_data.name,
         email=user_data.email,
-        password=auth.hash_password(user_data.password)
+        hashed_password=auth.hash_password(user_data.password)
     )
 
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
     return new_user
+
+
+@router.post("/login", response_model=Token)
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == form_data.username).first()
+    if not user or not auth.verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid credentials")
+    token = auth.create_access_token(data={"user_id": user.id})
+    return {"access_token": token, "token_type": "bearer"}
