@@ -10,6 +10,7 @@ class Question(Base):
     id = Column(Integer, primary_key=True, index=True)
     question_number = Column(Integer, nullable=False)
     question_text = Column(String, nullable=False)
+    difficulty = Column(String, nullable=False, default="easy")
     timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(
         timezone.utc), nullable=False)
     # If you pass a value to default, it's evaluated once at import time and frozen.
