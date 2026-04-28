@@ -67,3 +67,4 @@ def create_question(session_id: int,
     db.refresh(new_question)
 
     return new_question
+# test
