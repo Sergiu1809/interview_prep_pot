@@ -7,7 +7,7 @@ class QuestionRequest(BaseModel):
     difficulty: Literal["easy", "medium", "hard"] = "easy"
 
 
-class QuestionResponse:
+class QuestionResponse(BaseModel):
     id: int
     question_number: int
     question_text: str
