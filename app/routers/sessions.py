@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.database import get_db
+from app.dependencies import get_current_user
 from app.models.users import User
 from app.models.sessions import Session as SessionModel
 from app.models.questions import Question
@@ -9,7 +10,7 @@ from app.schemas.session import SessionCreate, SessionResponse
 from app.schemas.question import QuestionRequest, QuestionResponse
 from app.schemas.answer import AnswerRequest, AnswerResponse
 from app.services.ai_service import generate_question, evaluate_answer
-from app.dependencies import get_current_user
+from app.services.session_service import get_session_or_raise
 
 
 router = APIRouter(prefix="/sessions", tags=["Sessions"])
@@ -36,16 +37,7 @@ def create_question(session_id: int,
                     db: Session = Depends(get_db),
                     current_user: User = Depends(get_current_user)):
 
-    session = db.query(SessionModel).filter(
-        SessionModel.id == session_id).first()
-
-    if not session:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
-
-    if session.user_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="Not authorized to access this session")
+    session = get_session_or_raise(session_id, current_user, db)
 
     if session.status != "active":
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
@@ -59,7 +51,7 @@ def create_question(session_id: int,
             session.topic, question_data.difficulty, question_number)
     except Exception:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-                            detail="AI evaluation service is currently unavailable")
+                            detail="AI generation service is currently unavailable")
 
     new_question = Question(
         question_number=question_number,
@@ -76,22 +68,13 @@ def create_question(session_id: int,
 
 
 @router.post("/{session_id}/{question_id}/answer", response_model=AnswerResponse, status_code=status.HTTP_201_CREATED)
-def answer_submission(session_id: int, question_id: int,
-                      answer_data: AnswerRequest,
-                      db: Session = Depends(get_db),
-                      current_user: User = Depends(get_current_user)
-                      ):
+def submit_answer(session_id: int, question_id: int,
+                  answer_data: AnswerRequest,
+                  db: Session = Depends(get_db),
+                  current_user: User = Depends(get_current_user)
+                  ):
 
-    session = db.query(SessionModel).filter(
-        SessionModel.id == session_id).first()
-
-    if not session:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
-
-    if session.user_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
-                            detail="Not authorized to access this session")
+    session = get_session_or_raise(session_id, current_user, db)
 
     if session.status != "active":
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
@@ -133,3 +116,22 @@ def answer_submission(session_id: int, question_id: int,
     db.refresh(new_answer)
 
     return new_answer
+
+
+@router.patch("/{session_id}/complete", response_model=SessionResponse, status_code=status.HTTP_200_OK)
+def complete_session(session_id: int,
+                     db: Session = Depends(get_db),
+                     current_user: User = Depends(get_current_user)):
+
+    session = get_session_or_raise(session_id, current_user, db)
+
+    if session.status != "active":
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Session is no longer active")
+
+    session.status = "completed"
+
+    db.commit()
+    db.refresh(session)
+
+    return session
