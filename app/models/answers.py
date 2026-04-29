@@ -9,8 +9,9 @@ class Answer(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     answer_text = Column(String, nullable=False)
-    feedback = Column(String, nullable=True)
-    score = Column(Integer, nullable=True)
+    feedback = Column(String, nullable=False)
+    score = Column(Integer, nullable=False)
+    model_answer = Column(String, nullable=False)
     timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(
         timezone.utc), nullable=False)
     question_id = Column(Integer, ForeignKey("questions.id"), nullable=False)

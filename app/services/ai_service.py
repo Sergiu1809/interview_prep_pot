@@ -1,6 +1,7 @@
 from anthropic import Anthropic
 from dotenv import load_dotenv
 import os
+import json
 
 load_dotenv()
 
@@ -35,3 +36,38 @@ Rules:
     )
 
     return message.content[0].text.strip()
+
+
+def evaluate_answer(question_asked: str, question_response: str):
+    prompt = f"""You are a strict but fair technical interviewer evaluating a candidate's answer.
+
+Question asked: {question_asked}
+Candidate's answer: {question_response}
+
+Evaluate the answer and respond ONLY with a JSON object with exactly these three keys:
+- "score": an integer from 1 to 10
+- "feedback": a string explaining what was good and what was missing
+- "model_answer": a string with the ideal complete answer
+
+Do not include any text outside the JSON object. No introduction, no explanation, just the raw JSON.
+
+Example format:
+{{
+    "score": 7,
+    "feedback": "Good understanding of the concept but missed edge cases.",
+    "model_answer": "The complete ideal answer goes here."
+}}
+"""
+    message = client.messages.create(
+        model="claude-opus-4-5",
+        max_tokens=1024,
+        messages=[{"role": "user", "content": prompt}]
+    )
+
+    response_text = message.content[0].text
+    data = json.loads(response_text)
+    return {
+        "score": data["score"],
+        "feedback": data["feedback"],
+        "model_answer": data["model_answer"]
+    }
