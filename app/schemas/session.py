@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 
 
@@ -7,11 +7,10 @@ class SessionCreate(BaseModel):
 
 
 class SessionResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     topic: str
     status: str
     user_id: int
     timestamp: datetime
-
-    class Config:
-        from_attributes = True

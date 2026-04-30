@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from datetime import datetime
 
 
@@ -7,6 +7,8 @@ class AnswerRequest(BaseModel):
 
 
 class AnswerResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id:  int
     answer_text: str
     feedback: str
@@ -14,6 +16,3 @@ class AnswerResponse(BaseModel):
     model_answer: str
     timestamp: datetime
     question_id: int
-
-    class Config:
-        from_attributes = True
