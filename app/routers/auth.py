@@ -35,6 +35,6 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     user = db.query(User).filter(User.email == form_data.username).first()
     if not user or not auth.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid credentials")
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     token = auth.create_access_token(data={"user_id": user.id})
     return {"access_token": token, "token_type": "bearer"}
