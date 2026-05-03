@@ -8,17 +8,28 @@ load_dotenv()
 client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 
 
-def generate_question(topic: str, difficulty: str, question_number: int) -> str:
-    prompt = prompt = f"""You are a strict but fair technical interviewer conducting a real interview.
+def generate_question(topic: str, difficulty: str, question_number: int, history: list[dict] = None) -> str:
+    conversation_context = ""
+    if history:
+        conversation_context = "Here is the interview so far:\n\n"
+        for i, exchange in enumerate(history, 1):
+            conversation_context += f"Q{i}: {exchange['question']}\n"
+            conversation_context += f"A{i}: {exchange['answer']}\n\n"
+
+    prompt = f"""You are a strict but fair technical interviewer conducting a real interview.
 
 Topic: {topic}
 Difficulty: {difficulty}
 Question number: {question_number}
 
-Your task: Ask one technical interview question.
+{conversation_context}
+
+Your task: Ask the next interview question.
 
 Rules:
-- The question must be clear and unambiguous — the candidate must immediately understand what is being asked
+- Build on the candidate's previous answers when relevant — follow up on weak points or dig deeper into topics they seem to know
+- Do NOT repeat any question you have already asked
+- The question must be clear and unambiguous
 - One question only, no follow-up questions inside it
 - No introduction, no "Sure!", no "Great question!" — just the question itself
 - No hints, no examples, no partial answers
@@ -27,12 +38,11 @@ Rules:
     medium = practical application
     hard = deep understanding or edge cases
 """
+
     message = client.messages.create(
         model="claude-opus-4-5",
         max_tokens=256,
-        messages=[
-            {"role": "user", "content": prompt}
-        ]
+        messages=[{"role": "user", "content": prompt}]
     )
 
     return message.content[0].text.strip()

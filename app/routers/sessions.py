@@ -46,9 +46,21 @@ def create_question(session_id: int,
     question_number = db.query(Question).filter(
         Question.session_id == session_id).count() + 1
 
+    previous_questions = db.query(Question).filter(
+        Question.session_id == session_id).order_by(Question.question_number).all()
+
+    history = []
+
+    for q in previous_questions:
+        answer = db.query(Answer).filter(Answer.question_id == q.id).first()
+        history.append({
+            "question": q.question_text,
+            "answer": answer.answer_text if answer else "No answer provided"
+        })
+
     try:
         question_text = generate_question(
-            session.topic, question_data.difficulty, question_number)
+            session.topic, question_data.difficulty, question_number, history)
     except Exception:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                             detail="AI generation service is currently unavailable")
