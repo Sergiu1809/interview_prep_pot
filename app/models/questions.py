@@ -17,4 +17,4 @@ class Question(Base):
     # If you pass a function to default, it's called fresh every time a row is created.
     session_id = Column(Integer, ForeignKey("sessions.id"), nullable=False)
     session = relationship("Session", back_populates="questions")
-    answer = relationship("Answer", back_populates="question")
+    answer = relationship("Answer", back_populates="question", uselist=False)
