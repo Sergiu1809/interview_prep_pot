@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
+import { apiRequest } from "../api"
 
 
 function RegisterPage(){
@@ -12,11 +13,7 @@ function RegisterPage(){
 
     const handleRegister = async () => {
         try{
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/register`, {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({name: name, email: email, password: password})
-            })
+            const response = await apiRequest("/auth/register", "POST", {name: name, email: email, password: password})
 
             const data = await response.json()
 
