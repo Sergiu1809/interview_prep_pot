@@ -13,10 +13,13 @@ function InterviewPage(){
     const [score, setScore] = useState("")
     const [modelAnswer, setModelAnswer] = useState("")
     const [error, setError] = useState("")
+    const [loading, setLoading] = useState(false)
 
     const navigate = useNavigate()
 
     const generateQuestion = async () => {
+        if (loading) return          
+        setLoading(true) 
         setAnswer("")
 
         try{
@@ -31,6 +34,8 @@ function InterviewPage(){
             }
         } catch { 
             setError("Cannot connect to server")
+        } finally{
+            setLoading(false)
         }
     }
 
@@ -40,6 +45,9 @@ function InterviewPage(){
             return
         }
         setError("")
+        if (loading) return          
+        setLoading(true) 
+        
         
         try{
             const response = await apiRequest(`/sessions/${sessionId}/${questionId}/answer`, "POST", {answer_text: answer})
@@ -54,10 +62,15 @@ function InterviewPage(){
             }
         } catch {
             setError("Cannot connect to server")
+        } finally{
+            setLoading(false)
         }
     }
 
     const completeSession = async () => {
+        if (loading) return
+        setLoading(true)
+
         try{
             const response = await apiRequest(`/sessions/${sessionId}/complete`,"PATCH")
 
@@ -81,7 +94,7 @@ function InterviewPage(){
                         <option value ="medium">Medium</option>
                         <option value="hard">Hard</option>
                     </select>
-                    <button onClick={generateQuestion}>Generate Question</button>
+                    <button onClick={generateQuestion} disabled={loading}>{loading ? "Generating..." : "Generate Question"}</button>
                     {error && <p>{error}</p>}
                 </div>
                 )}
@@ -90,7 +103,7 @@ function InterviewPage(){
                 <div>
                     <p>{question}</p>
                     <textarea value={answer} placeholder="Your answer..."  onChange={(e) => setAnswer(e.target.value)}></textarea>
-                    <button onClick={submitAnswer}>Submit</button>
+                    <button onClick={submitAnswer} disabled={loading} >{loading ? "Submitting..." : "Submit"}</button>
                     {error && <p>{error}</p>} 
                 </div>
             )}
@@ -101,7 +114,9 @@ function InterviewPage(){
                     {feedback && <p>{feedback}</p>}
                     {modelAnswer && <p>{modelAnswer}</p>}
                     <button onClick={() => setPhase("choosing")}>Next Question</button>
-                    <button onClick={completeSession}>Complete Session</button>
+                    <button onClick={completeSession} disabled={loading}>
+                        {loading ? "Completing..." : "Complete Session"}
+                    </button>
                 </div>
             )}
         </div>

@@ -6,6 +6,7 @@ import { apiRequest } from "../api"
 function DashboardPage(){
     const [topic, setTopic] = useState("")
     const [error, setError] = useState("")
+    const [loading, setLoading] = useState(false)
 
     const navigate = useNavigate()
 
@@ -15,6 +16,9 @@ function DashboardPage(){
             setError("Please enter a topic")
             return
         }
+
+        if (loading) return          
+        setLoading(true) 
 
         try{
             const response = await apiRequest("/sessions/", "POST", {topic: topic})
@@ -32,6 +36,8 @@ function DashboardPage(){
             }
         } catch(err){
                 setError("Cannot connect to server")
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -39,7 +45,7 @@ function DashboardPage(){
     <div>
         <h1>Dashboard Page</h1>
         <input type="text" placeholder="Name session" value={topic} onChange={(e) => setTopic(e.target.value)}/>
-        <button onClick={createSession}>Create Session</button>
+        <button onClick={createSession} disabled={loading}>{loading ? "Creating Session..." : "Create Session"}</button>
         {error && <p>{error}</p>}
         <button onClick={() => navigate("/history")}>View History</button>
     </div>  
