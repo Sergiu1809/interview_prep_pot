@@ -5,10 +5,14 @@ function LoginPage(){
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [error, setError] = useState("")
+    const [loading, setLoading] = useState(false)
 
     const navigate = useNavigate()
 
     const handleLogin = async () => {
+        if (loading) return          
+        setLoading(true) 
+
         try{
             const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/login`, {
                 method: "POST",
@@ -30,6 +34,8 @@ function LoginPage(){
             }
         } catch(err) {
             setError("Cannot connect to server")
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -38,7 +44,9 @@ function LoginPage(){
                 <h1>Login</h1>
                 <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)}/>
                 <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)}/>
-                <button onClick={handleLogin}>Login</button>
+                <button onClick={handleLogin} disabled={loading}>
+                    {loading ? "Logging..." : "Login"}
+                </button>
                 {error && <p>{error}</p>}
             </div>
         )

@@ -8,10 +8,27 @@ function RegisterPage(){
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
     const [error, setError] = useState("")
+    const [loading, setLoading] = useState(false)
 
     const navigate = useNavigate()
 
     const handleRegister = async () => {
+        if (!name.trim()) {
+            setError("Please enter your name")
+            return
+        }
+        if (!email.trim()) {
+            setError("Please enter your email")
+            return
+        }
+        if (password.length < 8) {
+            setError("Password must be at least 8 characters")
+            return
+        }
+        
+        if (loading) return          
+        setLoading(true)
+
         try{
             const response = await apiRequest("/auth/register", "POST", {name: name, email: email, password: password})
 
@@ -29,6 +46,8 @@ function RegisterPage(){
             }
         } catch(err){
             setError("Cannot connect to server")
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -38,7 +57,9 @@ function RegisterPage(){
             <input type="text" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)}/>
             <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)}/>
             <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)}/>
-            <button onClick={handleRegister}>Register</button>
+            <button onClick={handleRegister} disabled={loading}>
+                {loading ? "Registering..." : "Register"}
+            </button>
             {error && <p>{error}</p>}
         </div>
     )

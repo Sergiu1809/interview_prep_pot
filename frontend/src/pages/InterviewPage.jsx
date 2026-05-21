@@ -81,6 +81,8 @@ function InterviewPage(){
             }
         } catch {
             setError("Cannot connect to server")
+        } finally{
+            setLoading(false)
         }
     }
 
